@@ -1,8 +1,8 @@
 //! The shelf, the companion strip and the editor drawn (`.schw-*` of
 //! `schwalby.css`).
 
-use corvus_api::ui::tip::HoverTr;
 use corvus_api::egui::{self, Color32, Pos2, Rect, Stroke, Vec2};
+use corvus_api::ui::tip::HoverTr;
 use serde_json::Value;
 
 use super::companion::{CompDialog, POWER_ACTIONS};
