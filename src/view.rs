@@ -2,6 +2,7 @@
 //! `schwalby.css`).
 
 use corvus_api::egui::{self, Color32, Pos2, Rect, Stroke, Vec2};
+use corvus_api::i18n::tr;
 use corvus_api::ui::tip::HoverTr;
 use serde_json::Value;
 
@@ -186,9 +187,10 @@ fn companion_strip(p: &mut Schwalby, ui: &mut egui::Ui, f: &mut Form, h: &mut Ho
     kit::dot(&painter, Pos2::new(word_x - 6.0 - 3.5, cy), state_color(state), false);
     let state_left = word_x - 6.0 - 7.0;
     // name first; the address gives way when the panel is narrow
+    // Translated before it is shortened: a shortened text is no key any more.
     let (name, host) = match &p.companion {
         Some(c) => (c.display_name().to_string(), c.host.clone()),
-        None => ("Companion computer".to_string(), "Press to set".to_string()),
+        None => (tr("Companion computer").into_owned(), tr("Press to set").into_owned()),
     };
     let room = (state_left - 8.0 - text_x).max(0.0);
     let name_g = style::galley(ui, &name, 12.0, Weight::W600, style::text_1(), 0.0);
