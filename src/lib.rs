@@ -139,7 +139,7 @@ pub struct Schwalby {
     pub(crate) power_menu: bool,
     pub(crate) power: Option<companion::PowerRun>,
     /// Where the companion strip was drawn, for the power menu to hang from.
-    pub(crate) strip: eframe::egui::Rect,
+    pub(crate) strip: corvus_api::egui::Rect,
     /// The calls an AI client made that wait on a save or a press.
     pub(crate) mcp: mcp::State,
 }
@@ -173,7 +173,7 @@ impl Default for Schwalby {
             dialog: None,
             power_menu: false,
             power: None,
-            strip: eframe::egui::Rect::NOTHING,
+            strip: corvus_api::egui::Rect::NOTHING,
             mcp: mcp::State::default(),
         }
     }
@@ -186,7 +186,7 @@ impl Plugin for Schwalby {
             name: "Schwalby",
             icon: "bird",
             description: "One-press buttons that start programs on this computer or over SSH",
-            version: "1.2.0",
+            version: "2.0.0",
             order: 30,
             can_tab: true,
         }
@@ -279,7 +279,7 @@ impl Plugin for Schwalby {
         self.mcp_result(token)
     }
 
-    fn show(&mut self, ui: &mut eframe::egui::Ui, area: eframe::egui::Rect, h: &mut Host) -> f32 {
+    fn show(&mut self, ui: &mut corvus_api::egui::Ui, area: corvus_api::egui::Rect, h: &mut Host) -> f32 {
         let height = view::show(self, ui, area, h);
         view::dialogs(self, ui.ctx(), h);
         height
@@ -1014,19 +1014,19 @@ mod tests {
     use super::*;
 
     #[test]
-    fn the_details_the_store_lists_are_the_plugins_own() {
-        let manifest = include_str!("../Cargo.toml").replace('\r', "");
-        let i = plugin().info();
+    fn the_manifest_says_what_the_plugin_says_of_itself() {
+        let manifest: serde_json::Value = serde_json::from_str(include_str!("../plugin.json")).expect("plugin.json");
+        let i = Schwalby::default().info();
         for (key, want) in [
+            ("id", i.id),
             ("name", i.name),
             ("description", i.description),
             ("icon", i.icon),
             ("version", i.version),
         ] {
-            assert!(
-                manifest.contains(&format!("\n{key} = \"{want}\"\n")),
-                "[package.metadata.corvus] says something else than the plugin for {key}"
-            );
+            assert_eq!(manifest[key], want, "plugin.json says something else than the plugin for {key}");
         }
+        assert_eq!(manifest["order"], i.order);
+        assert_eq!(manifest["can_tab"], i.can_tab);
     }
 }

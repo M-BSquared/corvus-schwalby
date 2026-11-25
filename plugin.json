@@ -1,0 +1,11 @@
+{
+  "id": "schwalby",
+  "name": "Schwalby",
+  "description": "One-press buttons that start programs on this computer or over SSH",
+  "icon": "bird",
+  "version": "2.0.0",
+  "order": 30,
+  "can_tab": true,
+  "min_corvus": "2026.11.94",
+  "permissions": ["local", "ssh", "files", "ai.tools"]
+}

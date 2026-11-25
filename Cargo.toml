@@ -9,16 +9,9 @@ description = "The schwalby plugin of Corvus GCS"
 
 [dependencies]
 corvus_api = { path = "../../src/api" }
-eframe = { workspace = true }
 serde_json = { workspace = true }
 
 [lib]
 crate-type = ["cdylib", "rlib"]
 
 # Published as a shared library that Settings installs, not compiled into the program.
-[package.metadata.corvus]
-loadable = true
-name = "Schwalby"
-description = "One-press buttons that start programs on this computer or over SSH"
-icon = "bird"
-version = "1.2.0"

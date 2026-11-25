@@ -2,7 +2,7 @@
 //! `schwalby.css`).
 
 use corvus_api::ui::tip::HoverTr;
-use eframe::egui::{self, Color32, Pos2, Rect, Stroke, Vec2};
+use corvus_api::egui::{self, Color32, Pos2, Rect, Stroke, Vec2};
 use serde_json::Value;
 
 use super::companion::{CompDialog, POWER_ACTIONS};
