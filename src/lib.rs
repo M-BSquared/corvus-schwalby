@@ -186,7 +186,7 @@ impl Plugin for Schwalby {
             name: "Schwalby",
             icon: "bird",
             description: "One-press buttons that start programs on this computer or over SSH",
-            version: "1.1.0",
+            version: "1.2.0",
             order: 30,
             can_tab: true,
         }
@@ -195,10 +195,10 @@ impl Plugin for Schwalby {
     fn options(&self) -> Vec<OptionSpec> {
         vec![
             OptionSpec::toggle(MCP_EDIT, "AI clients may add buttons", false).hint(
-                "Through Corvus' MCP server an AI client can add buttons that run on this computer, and change or remove the ones it added. A new or changed one waits on the shelf until you press it and allow it.",
+                "Through Corvus' MCP server an AI client can add buttons that run on this computer, and change or remove the ones it added. A new or changed one waits on the shelf until you press it and allow it. It also needs Plugin tools switched on in Settings, Connections, MCP.",
             ),
             OptionSpec::toggle(MCP_RUN, "AI clients may press buttons", false).hint(
-                "Through Corvus' MCP server an AI client can press any allowed button, which runs its program as your own press would.",
+                "Through Corvus' MCP server an AI client can press any allowed button, which runs its program as your own press would, and stop it again. It also needs Plugin tools switched on in Settings, Connections, MCP.",
             ),
         ]
     }

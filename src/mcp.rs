@@ -6,14 +6,17 @@
 //! "May add buttons" lets it add buttons that run on this computer, and change
 //! or remove the ones it added; such a button carries an AI mark, and a new or
 //! changed one waits on the shelf until the operator presses it and allows it.
-//! "May press buttons" lets it press any allowed button, as the operator
-//! would. With the shelf closed a press goes the same way, through the same
+//! "May press buttons" lets it press any allowed button, and stop it, as the
+//! operator would. With the shelf closed a press goes the same way, through the same
 //! endpoints and sessions, without the row to show it.
 
 use serde_json::{json, Value};
 
-use super::model::{describe_button, mcp_button, normalize_buttons, Button, MAX_BUTTONS, MCP_EDIT, MCP_RUN};
+use super::model::{
+    describe_button, mcp_button, normalize_buttons, session_name, Button, MAX_BUTTONS, MCP_EDIT, MCP_RUN,
+};
 use super::Schwalby;
+use corvus_api::plugin::ssh::Mode;
 use corvus_api::plugin::{Host, McpTool, Reply};
 
 enum Job {
@@ -21,6 +24,8 @@ enum Job {
     Saving { token: u64, reply: Reply, ok: Value },
     /// A press, answered once its task is over.
     Pressing { token: u64, id: String, label: String },
+    /// A stop, answered once the session is closed.
+    Stopping { token: u64, id: String, label: String },
 }
 
 #[derive(Default)]
@@ -117,6 +122,13 @@ impl Schwalby {
                 json!({"type": "object", "properties": {"id": {"type": "string"}}, "required": ["id"]}),
                 false,
             ));
+            tools.push(tool(
+                "stop_button",
+                "Stop a Schwalby button",
+                "Stop what a button started, as the operator's stop does: Ctrl-C in its session, then the session is closed.",
+                json!({"type": "object", "properties": {"id": {"type": "string"}}, "required": ["id"]}),
+                false,
+            ));
         }
         tools
     }
@@ -185,6 +197,23 @@ impl Schwalby {
                 let next: Vec<Button> = list.iter().filter(|b| b.id != entry.id).cloned().collect();
                 self.save_shelf(&next, token, json!({"removed": entry.id}), h);
             }
+            "stop_button" => {
+                let id = id_arg(args)?;
+                let entry = list
+                    .iter()
+                    .find(|b| b.id == id)
+                    .cloned()
+                    .ok_or_else(|| format!("No button {id}. list_buttons names them."))?;
+                if entry.mode == Mode::Background {
+                    return Err("That button runs in the background and has no session to stop. What it started ends when Corvus closes.".into());
+                }
+                self.stop(&entry, h);
+                self.mcp.jobs.push(Job::Stopping {
+                    token,
+                    id: entry.id,
+                    label: entry.label,
+                });
+            }
             _ => {
                 let id = id_arg(args)?;
                 let entry = list
@@ -245,6 +274,16 @@ impl Schwalby {
                         }),
                     )),
                 },
+                Job::Stopping { token, id, label } => {
+                    if self.closing(&session_name(&id)) {
+                        keep.push(Job::Stopping { token, id, label });
+                    } else if let Some(why) = self.errors.get(&id) {
+                        self.mcp.done.push((token, Err(why.clone())));
+                    } else {
+                        let ok = json!({"ok": true, "message": format!("{label} stopped")});
+                        self.mcp.done.push((token, Ok(ok)));
+                    }
+                }
                 Job::Pressing { token, id, label } => {
                     if self.pressing(&id) {
                         keep.push(Job::Pressing { token, id, label });

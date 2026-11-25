@@ -16,7 +16,7 @@ use corvus_api::plugin::Host;
 use corvus_api::ui::card::{self, Look};
 use corvus_api::ui::form::{self, Form};
 use corvus_api::ui::kit::{self, Choice, Variant};
-use corvus_api::ui::message::Tone;
+use corvus_api::ui::message::{NoticeBox, Tone};
 use corvus_api::ui::segmented::{self, Segment};
 use corvus_api::ui::style::{self, Weight};
 use corvus_api::ui::{icons, menu, modal, popover};
@@ -72,28 +72,20 @@ fn tone(kind: &str) -> Tone {
 
 /// `.schw-status`: a slim one-liner, never a block.
 fn status_line(ui: &egui::Ui, f: &mut Form, text: &str, tone: Tone) {
-    let fg = match tone {
-        Tone::Ok => style::healthy(),
-        Tone::Err => style::critical(),
-        Tone::Warn => style::warning(),
-        Tone::Plain => style::text_2(),
-    };
-    let line = 11.5 * 1.4;
-    let h = line + 6.0 + 2.0;
-    let rect = f.rect(h);
-    let inner_left = if tone == Tone::Plain { 10.0 } else { 1.0 + 10.0 };
-    if tone != Tone::Plain {
-        card::paint(ui.painter(), rect, Look::Tone(tone));
-        ui.painter()
-            .circle_filled(Pos2::new(rect.left() + 1.0 + 10.0 + 3.5, rect.center().y), 3.5, fg);
+    let rect = f.rect(11.5 * 1.4 + 8.0);
+    if tone == Tone::Plain {
+        let shown = fit_text(ui, text, 11.5, Weight::W400, rect.width() - 20.0);
+        let g = style::galley(ui, &shown, 11.5, Weight::W400, style::text_2(), 0.0);
+        let at = Pos2::new(rect.left() + 10.0, rect.center().y - g.size().y / 2.0);
+        ui.painter().galley(at, g, style::text_2());
+        ui.interact(rect, ui.scope_id().with(("schwstatus", text)), egui::Sense::hover())
+            .on_hover_tr(text);
+    } else {
+        NoticeBox::new(tone, text)
+            .one_line()
+            .pad_y(3.0)
+            .show(ui, rect.left(), rect.top(), rect.width());
     }
-    let left = rect.left() + inner_left + if tone == Tone::Plain { 0.0 } else { 15.0 };
-    let shown = fit_text(ui, text, 11.5, Weight::W400, rect.right() - 10.0 - left);
-    let g = style::galley(ui, &shown, 11.5, Weight::W400, fg, 0.0);
-    ui.painter()
-        .galley(Pos2::new(left, rect.center().y - g.size().y / 2.0), g, fg);
-    ui.interact(rect, ui.scope_id().with(("schwstatus", text)), egui::Sense::hover())
-        .on_hover_tr(text);
     f.y = rect.bottom();
 }
 
